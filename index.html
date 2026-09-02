@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Traductor meteorológico avanzado</title>
+<title>Traductor avisos Trombas Marinas</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
 
@@ -115,7 +115,7 @@
 <body>
 
 <div id="mainContent">
-  <h1>TRADUCTOR METEOROLÓGICO AVANZADO</h1>
+  <h1>Traductor Avisos Trombas Marinas</h1>
 
   <div class="btn-top">
     <button id="btnTraducir" onclick="traducir()">Traducir</button>
@@ -138,6 +138,17 @@
 
 <script>
 const reglasEspeciales = {
+  "AVISO DE PROBABILIDAD DE OCURRENCIA DE NUBES CONVECTIVAS FACTIBLE DE GENERAR TROMBAS MARINAS":"WARNING OF PROBABILITY OF OCCURRENCE OF CONVECTIVE CLOUDS CAPABLE OF GENERATING WATERSPOUTS",
+  "PROBABILIDAD DE OCURRENCIA DE NUBES CONVECTIVAS FACTIBLE DE GENERAR TROMBAS MARINAS":"PROBABILITY OF OCCURRENCE OF CONVECTIVE CLOUDS CAPABLE OF GENERATING WATERSPOUTS",
+  "ESTA Y OTRAS INFORMACIONES METEOROLOGICAS SERAN DIFUNDIDAS POR LA RED DE RADIO ESTACIONES MARITIMAS COSTERAS Y PUBLICADAS EN LA PAGINA WEB":"THIS AND OTHER METEOROLOGICAL INFORMATION WILL BE BROADCASTED BY THE COASTAL MARITIME RADIO STATIONS NETWORK AND PUBLISHED ON THE WEBSITE",
+  "SI VES LA FORMACION DE UNA TROMBA MARINA, DIRIJE TU NAVE EN LA DIRECCION CONTRARIA, ALEJANDOTE DEL FENOMENO":"IF YOU SEE THE FORMATION OF A WATERSPOUT, STEER YOUR VESSEL IN THE OPPOSITE DIRECTION, MOVING AWAY FROM THE PHENOMENON",
+  "SUSPENDER TODA FAENA DE BUCEO, PESCA O MANIOBRAS, PONIENDO AL PERSONAL BAJO RESGUARDO Y CON SUS CHALECOS SALVAVIDAS PUESTOS":"SUSPEND ALL DIVING, FISHING OR MANEUVERING OPERATIONS, PUTTING PERSONNEL UNDER SHELTER AND WITH THEIR LIFE JACKETS ON",
+  "DIA, HORARIO Y SECTOR DE MAYOR ATENCION":"DAY, TIME AND SECTOR OF GREATEST ATTENTION",
+  "EN LA REGION DE LOS LAGOS":"IN THE LAKES REGION",
+  "REGION DE LOS LAGOS":"LOS LAGOS REGION",
+  "ACTIVIDAD MARITIMA":"MARITIME ACTIVITY",
+  "DIA HORARIO":"DAY TIME",
+  "HORA":"TIME",
   "AVISO DE":"SEVERE",
   "AVISO ESPECIAL DE CONDICIONES METEOROLOGICAS":"SPECIAL WARNING OF METEOROLOGICAL CONDITIONS",
   "EVOLUCION":"EVOLUTION",
@@ -177,7 +188,8 @@ const reglasEspeciales = {
   "CENTRO DE BAJA PRESION DE": "LOW PRESSURE OF",
   "CENTRO DE ALTA PRESION DE": "HIGH PRESSURE OF",
   "ALBOLADA ALTA":"VERY HIGH",
-  "A LAS":" ",
+  "A LAS":"AT",
+  "AL":"TO THE",
   "A":"TO",
   "SECTOR OCEANICO":"OCEANIC AREA",
   "EN AREA OCEANICA":"IN OCEANIC AREA",
@@ -196,18 +208,19 @@ const reglasEspeciales = {
 };
 
 const diccionario = {
+ 'TITULO':'TITLE','COSTERO':'COASTAL','COSTERAS':'COASTAL','CENTRO':'CENTER','DESPLAZAMIENTO':'DISPLACEMENT','RECOMENDACIONES':'RECOMMENDATIONS',
  'VALIDO':'VALID','DESDE':'FROM','HASTA':'TO','DEL SUR':'THE SOUTH','SITUACION SINOPTICA':'SYNOPTIC SITUATION','PRONOSTICO':'FORECAST', 
  'MARGEN ANTICICLONICO':'ANTICYCLONIC EDGE','ANTICICLONICO':'ANTICYCLONIC','LIGERA INESTABILIDAD':'LIGHT UNSTABILITY','INESTABLE':'UNSTABLE',
  'POSTFRONTAL':'POSTFRONTAL','SISTEMA FRONTAL':'FRONTAL SYSTEM','PASO FRONTAL':'FRONTAL STEP','NUEVO PASO FRONTAL':'NEW FRONTAL STEP',
  'INESTABILIDAD POSTFRONTAL':'POSTFRONTAL UNSTABILITY','DESPLAZAMIENTO GENERAL':'GENERAL DISPLACEMENT','ASOCIADO':'ASSOCIATED',
  'UBICACION':'LOCATION','ANALISIS':'ANALYSIS','CUBIERTO':'OVERCAST','NUBLADO':'BROKEN','PARCIAL':'SCATTERED','DESPEJADO':'CLEAR',
- 'COBIERTO':'OVERCAST','NOBLADO':'BROKEN','PERCIAL':'SCATTERED','DASPEJDO':'CLEAR','VISIBILIDAD':'VIS','MUY MALA':'VERY POOR', 'AL':'TO',
+ 'COBIERTO':'OVERCAST','NOBLADO':'BROKEN','PERCIAL':'SCATTERED','DASPEJDO':'CLEAR','VISIBILIDAD':'VIS','MUY MALA':'VERY POOR',
  'MALA':'POOR','REGULAR':'AVERAGE','BUENA':'GOOD','VTO':'WIND','VIENTO':'WIND','NUDOS':'KT','NDS':'KT','ROLANDO':'SHIFTING',
  'RACHAS':'GUST','AUMENTANDO':'INCREASING','DISMINUYENDO':'DECREASING','VARIANDO':'BECOMING','OCASIONAL':'OCCASIONAL',
  'OCASIONALES':'OCCASIONAL','CHUBASCOS':'SHOWERS','GRANIZOS':'HAIL','PRECIPITACIONES':'PRECIPITATION','LLOVIZNA':'DRIZZLE',
  'NIEBLA':'FOG','NEBLINA':'MIST','NIEVE':'SNOW','AGUA NIEVE':'SLEET','MAR':'SEA','CALMA':'CALM','LLANA':'SMOOTH','RIZADA':'RIPPLED',
  'MAREJADILLA':'SLIGHT','MAREJADA':'MODERATE','GRUESA':'ROUGH','MUY':'VERY','ALBOLADA':'HIGH','COMO':'AS','DE FONDO':'SWELL',
- 'EN':'IN','BAHIA':'BAY','HORA LOCAL':'LOCAL TIME','EMITIDO':'ISSUED','Y':'AND','DE':'THE','ENE':'JAN','FEB':'FEB','MAR':'MAR',
+ 'EN':'IN','BAHIA':'BAY','HORA LOCAL':'LOCAL TIME','EMITIDO':'ISSUED','Y':'AND','DE':'OF','ENE':'JAN','FEB':'FEB','MAR':'MAR',
  'ABR':'APR','MAY':'MAY','JUN':'JUN','JUL':'JUL','AGO':'AUG','SEP':'SEP','OCT':'OCT','NOV':'NOV','DIC':'DEC'
 };
 
@@ -228,8 +241,10 @@ function translateDia(dia){
 
 function traducir(){
     let texto = document.getElementById('input').value.toUpperCase();
+    // Eliminar tildes
     texto = texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
+    // Proteger abreviaturas compuestas (ej. N/S, NW/SW)
     const regexCompuestas = /\b(N|S|E|W|NE|NW|SE|SW)\/(N|S|E|W|NE|NW|SE|SW)\b/gi;
     const protecciones = [];
     texto = texto.replace(regexCompuestas, match=>{
@@ -237,27 +252,35 @@ function traducir(){
         return `@@PROTEGIDO${protecciones.length-1}@@`;
     });
 
+    // Proteger viñetas específicas como "A.-"
     texto = texto.replace(/\bA\.-/g, "@@PROTEGIDO_A@@");
+    
+    // Aplicar frases largas o reglas compuestas
     texto = aplicarReglasEspeciales(texto);
 
+    // Aplicar diccionario básico
     Object.keys(diccionario).forEach(key=>{
         texto = texto.replace(new RegExp("\\b"+key+"\\b","gi"), diccionario[key]);
     });
 
+    // Reemplazar abreviaturas simples
     Object.keys(reemplazos).forEach(abrev=>{
         texto = texto.replace(new RegExp(`\\b${abrev}\\b`, 'g'), reemplazos[abrev]);
     });
 
+    // Restaurar protecciones
     protecciones.forEach((val,i)=>{
         texto = texto.replace(`@@PROTEGIDO${i}@@`, val.toUpperCase());
     });
 
     texto = texto.replace(/@@PROTEGIDO_A@@/g, "A.-");
 
+    // Reemplazar días de la semana y formato de fecha
     dias.forEach(dia=>{
         texto = texto.replace(new RegExp(`\\b${dia}\\b\\s*(\\d{1,2})`,'gi'), (m,n)=>`${translateDia(dia)} ${n}.`);
     });
 
+    // Limpiar múltiples espacios y saltos de línea extra
     texto = texto.replace(/ {2,}/g,' ')
                  .replace(/ \//g,'/')
                  .replace(/\/ /g,'/')
@@ -273,12 +296,15 @@ function traducir(){
     document.getElementById('output').value = texto;
 }
 
-function reiniciar(){ document.getElementById('input').value=''; document.getElementById('output').value=''; }
+function reiniciar(){ 
+    document.getElementById('input').value=''; 
+    document.getElementById('output').value=''; 
+}
 function copiarTexto(){ 
-  const output=document.getElementById('output'); 
+  const output = document.getElementById('output'); 
   output.select(); 
-  output.setSelectionRange(0,99999); 
-  navigator.clipboard.writeText(output.value)
+  output.setSelectionRange(0, 99999); 
+  navigator.clipboard.writeText(output.value);
 }
 </script>
 
